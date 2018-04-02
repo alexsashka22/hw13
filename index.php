@@ -99,9 +99,9 @@ try {
 				  <td><?php echo $row['date_added']; ?></td>
 				  <td><span style="color: rgb(235, 180, 15);"><?php echo $row['is_done']; ?></span></td>
 				  <td>
-				      <a href="index.php?id=<?= $row['id']?> &action=edit">Изменить</a>
-				      <a href="index.php?id=<?= $row['id']?> &action=done">Выполнить</a>
-				      <a href="index.php?id=<?= $row['id']?> &action=delete">Удалить</a>
+				      <a href="index.php?id=<?= $row['id']?>&action=edit">Изменить</a>
+				      <a href="index.php?id=<?= $row['id']?>&action=done">Выполнить</a>
+				      <a href="index.php?id=<?= $row['id']?>&action=delete">Удалить</a>
 				  </td>
 			</tr>
 				<?php } ?>
