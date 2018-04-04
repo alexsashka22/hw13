@@ -2,18 +2,30 @@
 
 header ("Content-Type: text/html; charset=utf-8");
 
-$description = "";
+$action = !empty($_GET['action']) ? $_GET['action'] : null;
+$orderBy = "date_add";
+$sortVariants = ['date_add', 'description', 'is_done'];
 
 try {
     $pdo = new PDO('mysql:host=localhost;dbname=hw13', 'root', '');
 
-    if (isset($_POST['description'])) {
-        $description = $_POST['description'];
+    if (isset($_POST['sort']) && !empty($_POST['sort_by']) && in_array($_POST['sort_by'], $sortVariants)) {
+        $orderBy = $_POST['sort_by'];
+    }
 
-        $sql = ("INSERT INTO tasks (description, is_done) VALUES ('$description', '0')");
-    } else {
-		    $sql = ("select * from tasks");
-		}
+    $sql = "SELECT * FROM tasks ORDER BY $orderBy";
+    $sth = $pdo->prepare($sql);
+    $sth->execute();
+
+    if (!empty($_POST['description'])) {
+        $pdo->exec("INSERT INTO tasks (id, description, is_done, date_added) VALUES (NULL, '".$_POST['description']."', 0, NOW());");
+
+        if ($sql) {
+            echo "<p>Данные успешно добавлены в таблицу.</p>";
+        } else {
+            echo "<p>Произошла ошибка.</p>";
+        }
+    }
 
     if (isset($action) && !empty($_GET['id'])) {
         $id = (int)$_GET['id'];
@@ -23,14 +35,26 @@ try {
             $sth->execute([$id]);
         }
 
-        if ($action =='done') {
-    	      $sth=$pdo->prepare("UPDATE tasks SET is_done = 1 WHERE id=?");
+        if ($action == 'done') {
+    	      $sth=$pdo->prepare("UPDATE tasks SET is_done = 1 WHERE id = ?");
             $sth->execute([$id]);
+
+            if ($sql) {
+                echo "<p>Задание выполнено.</p>";
+            } else {
+                echo "<p>Произошла ошибка.</p>";
+            }
         }
 
-        if ($action=='delete') {
+        if ($action == 'delete') {
     	    $sth=$pdo->prepare("DELETE FROM tasks WHERE id = ?");
             $sth->execute([$id]);
+
+            if ($sql) {
+                echo "<p>Задание удалено.</p>";
+            } else {
+                echo "<p>Произошла ошибка.</p>";
+            }
         }
 
         $sql = ("select * from tasks");
@@ -76,7 +100,7 @@ try {
     <form method="POST">
         <label for="sort">Сортировать по:</label>
         <select name="sort_by">
-            <option value="date_created">Дате добавления</option>
+            <option value="date_add">Дате добавления</option>
             <option value="is_done">Статусу</option>
             <option value="description">Описанию</option>
         </select>
@@ -97,11 +121,11 @@ try {
 			<tr>
 				  <td><?php echo $row['description']; ?></td>
 				  <td><?php echo $row['date_added']; ?></td>
-				  <td><span style="color: rgb(235, 180, 15);"><?php echo $row['is_done']; ?></span></td>
+				  <td><?php echo ($row['is_done'] ? "<span style='color: green;'>Выполнено</span>" : "<span style='color: orange;'>В процессе</span>"); ?></td>
 				  <td>
-				      <a href="index.php?id=<?= $row['id']?>&action=edit">Изменить</a>
-				      <a href="index.php?id=<?= $row['id']?>&action=done">Выполнить</a>
-				      <a href="index.php?id=<?= $row['id']?>&action=delete">Удалить</a>
+				      <a href="?id=<?= $row['id']?>&action=edit">Изменить</a>
+				      <a href="?id=<?= $row['id']?>&action=done">Выполнить</a>
+				      <a href="?id=<?= $row['id']?>&action=delete">Удалить</a>
 				  </td>
 			</tr>
 				<?php } ?>
