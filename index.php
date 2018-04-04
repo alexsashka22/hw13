@@ -17,7 +17,7 @@ try {
     $sth = $pdo->prepare($sql);
     $sth->execute();
 
-    if (!empty($_POST['description'])) {
+    if (!isset($_GET['id']) && isset($_POST['save']) && !empty($_POST['description'])) {
         $pdo->exec("INSERT INTO tasks (id, description, is_done, date_added) VALUES (NULL, '".$_POST['description']."', 0, NOW());");
 
         if ($sql) {
@@ -29,11 +29,6 @@ try {
 
     if (isset($action) && !empty($_GET['id'])) {
         $id = (int)$_GET['id'];
-
-        if ($action == 'edit') {
-            $sth = $pdo->prepare("SELECT description FROM tasks WHERE id = ?");
-            $sth->execute([$id]);
-        }
 
         if ($action == 'done') {
     	      $sth=$pdo->prepare("UPDATE tasks SET is_done = 1 WHERE id = ?");
@@ -57,7 +52,22 @@ try {
             }
         }
 
+        if ($action == 'edit') {
+          if (!empty($_POST['description'])) {
+              $sth = $pdo->prepare("UPDATE tasks SET description = ? WHERE id = ?");
+              $sth->execute([
+                  $_POST['description'],
+                  $id
+              ]);
+          }
+            $sth = $pdo->prepare("SELECT description FROM tasks WHERE id = ?");
+            $sth->execute([$id]);
+
+            $_POST['description'] = $sth->fetchColumn();
+        }
+
         $sql = ("select * from tasks");
+        $tasks = $sth->fetchAll();
     }
 } catch (PDOException $e) {
     die("Error!: " . $e->getMessage());
@@ -92,8 +102,8 @@ try {
 
  <div style="float: left">
     <form method="POST">
-        <input type="text" name="description" placeholder="Описание задачи" value="">
-        <input type="submit" name="save" value="Добавить">
+        <input type="text" name="description" placeholder="Описание задачи" value="<?=$_POST['description']?>">
+        <input type="submit" name="save" value="<?php echo ($action == 'edit' ? 'Сохранить' : 'Добавить') ?>">
     </form>
 </div>
 <div style="float: left; margin-left: 20px;">
